@@ -1,9 +1,0 @@
-node_modules
-dist
-.git
-*.md
-.env
-.env.*
-!.env.example
-npm-debug.log*
-test
