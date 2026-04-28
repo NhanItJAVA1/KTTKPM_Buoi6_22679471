@@ -1,0 +1,42 @@
+version: "3.8"
+
+# Chỉ dùng cho Máy 1 (Kafka Broker) trong môi trường LAN
+# Chạy: docker compose -f docker-compose.kafka.yml up -d
+
+networks:
+  kafka-network:
+    driver: bridge
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka-network
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Đổi IP này thành IP thực của máy broker trên LAN
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_HOST_IP:-192.168.1.100}:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_LOG_RETENTION_HOURS: 168
+    networks:
+      - kafka-network
+    restart: unless-stopped
